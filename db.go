@@ -803,13 +803,17 @@ func (a *Db) InsertWithContext(tableName string, data map[string]interface{}) (i
 
 	if a.dialect() == "postgres" {
 
-		sqlQueryParts = fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) ON CONFLICT DO NOTHING",
-			tableName, strings.Join(columns, ","), strings.Join(placeHoldersParts, ","))
+		sqlQueryParts = fmt.Sprintf(
+			"INSERT INTO %s (%s) VALUES (%s) ON CONFLICT DO NOTHING RETURNING id",
+			tableName, strings.Join(columns, ","), strings.Join(placeHoldersParts, ","),
+		)
 
 	} else {
 
-		sqlQueryParts = fmt.Sprintf("INSERT IGNORE INTO %s (%s) VALUES (%s)",
-			tableName, strings.Join(columns, ","), strings.Join(placeHoldersParts, ","))
+		sqlQueryParts = fmt.Sprintf(
+			"INSERT IGNORE INTO %s (%s) VALUES (%s)",
+			tableName, strings.Join(columns, ","), strings.Join(placeHoldersParts, ","),
+		)
 
 	}
 
@@ -859,13 +863,17 @@ func (a *Db) InsertWithContextTx(tableName string, data map[string]interface{}) 
 
 	if a.dialect() == "postgres" {
 
-		sqlQueryParts = fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) ON CONFLICT DO NOTHING",
-			tableName, strings.Join(columns, ","), strings.Join(placeHoldersParts, ","))
+		sqlQueryParts = fmt.Sprintf(
+			"INSERT INTO %s (%s) VALUES (%s) ON CONFLICT DO NOTHING RETURNING id",
+			tableName, strings.Join(columns, ","), strings.Join(placeHoldersParts, ","),
+		)
 
 	} else {
 
-		sqlQueryParts = fmt.Sprintf("INSERT IGNORE INTO %s (%s) VALUES (%s)",
-			tableName, strings.Join(columns, ","), strings.Join(placeHoldersParts, ","))
+		sqlQueryParts = fmt.Sprintf(
+			"INSERT IGNORE INTO %s (%s) VALUES (%s)",
+			tableName, strings.Join(columns, ","), strings.Join(placeHoldersParts, ","),
+		)
 
 	}
 
