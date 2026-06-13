@@ -82,15 +82,36 @@ func (a *Db) InsertQueryWithContext() (lastInsertID int64, err error) {
 
 	if a.dialect() == "postgres" {
 
-		var lastInsertId sql.NullInt64
+		if strings.Contains(a.Query, "RETURNING") {
+
+			var lastInsertId sql.NullInt64
+			if a.DBConn != nil {
+
+				err = a.DBConn.QueryRowContext(a.Context, a.Query, a.Params...).Scan(&lastInsertId)
+
+			} else {
+
+				err = a.DB.QueryRowContext(a.Context, a.Query, a.Params...).Scan(&lastInsertId)
+
+			}
+
+			if err != nil {
+				log.Printf(DbError, a.Query, a.Params, err.Error())
+				return 0, err
+			}
+
+			return lastInsertId.Int64, nil
+		}
+
+		var res sql.Result
 
 		if a.DBConn != nil {
 
-			err = a.DBConn.QueryRowContext(a.Context, a.Query, a.Params...).Scan(&lastInsertId)
+			res, err = a.DBConn.ExecContext(a.Context, a.Query, a.Params...)
 
 		} else {
 
-			err = a.DB.QueryRowContext(a.Context, a.Query, a.Params...).Scan(&lastInsertId)
+			res, err = a.DB.ExecContext(a.Context, a.Query, a.Params...)
 
 		}
 
@@ -99,7 +120,9 @@ func (a *Db) InsertQueryWithContext() (lastInsertID int64, err error) {
 			return 0, err
 		}
 
-		return lastInsertId.Int64, nil
+		_ = res
+
+		return 0, nil
 	}
 
 	var stmt *sql.Stmt
@@ -161,16 +184,47 @@ func (a *Db) InsertQueryWithContextTx() (lastInsertID int64, err error) {
 
 	if a.dialect() == "postgres" {
 
-		var lastInsertId sql.NullInt64
+		if strings.Contains(a.Query, "RETURNING") {
 
-		err = a.TX.QueryRowContext(a.Context, a.Query, a.Params...).Scan(&lastInsertId)
+			var lastInsertId sql.NullInt64
+			if a.DBConn != nil {
+
+				err = a.DBConn.QueryRowContext(a.Context, a.Query, a.Params...).Scan(&lastInsertId)
+
+			} else {
+
+				err = a.DB.QueryRowContext(a.Context, a.Query, a.Params...).Scan(&lastInsertId)
+
+			}
+
+			if err != nil {
+				log.Printf(DbError, a.Query, a.Params, err.Error())
+				return 0, err
+			}
+
+			return lastInsertId.Int64, nil
+		}
+
+		var res sql.Result
+
+		if a.DBConn != nil {
+
+			res, err = a.DBConn.ExecContext(a.Context, a.Query, a.Params...)
+
+		} else {
+
+			res, err = a.DB.ExecContext(a.Context, a.Query, a.Params...)
+
+		}
+
 		if err != nil {
-
 			log.Printf(DbError, a.Query, a.Params, err.Error())
 			return 0, err
 		}
 
-		return lastInsertId.Int64, nil
+		_ = res
+
+		return 0, nil
 	}
 
 	stmt, err := a.TX.PrepareContext(a.Context, a.Query)
