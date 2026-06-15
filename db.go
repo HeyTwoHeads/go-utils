@@ -187,17 +187,13 @@ func (a *Db) InsertQueryWithContextTx() (lastInsertID int64, err error) {
 		if strings.Contains(a.Query, "RETURNING") {
 
 			var lastInsertId sql.NullInt64
-			if a.DBConn != nil {
 
-				err = a.DBConn.QueryRowContext(a.Context, a.Query, a.Params...).Scan(&lastInsertId)
-
-			} else {
-
-				err = a.DB.QueryRowContext(a.Context, a.Query, a.Params...).Scan(&lastInsertId)
-
-			}
-
+			err = a.TX.QueryRowContext(a.Context, a.Query, a.Params...).Scan(&lastInsertId)
 			if err != nil {
+				if err == sql.ErrNoRows {
+					return 0, nil
+				}
+
 				log.Printf(DbError, a.Query, a.Params, err.Error())
 				return 0, err
 			}
@@ -205,18 +201,7 @@ func (a *Db) InsertQueryWithContextTx() (lastInsertID int64, err error) {
 			return lastInsertId.Int64, nil
 		}
 
-		var res sql.Result
-
-		if a.DBConn != nil {
-
-			res, err = a.DBConn.ExecContext(a.Context, a.Query, a.Params...)
-
-		} else {
-
-			res, err = a.DB.ExecContext(a.Context, a.Query, a.Params...)
-
-		}
-
+		res, err := a.TX.ExecContext(a.Context, a.Query, a.Params...)
 		if err != nil {
 			log.Printf(DbError, a.Query, a.Params, err.Error())
 			return 0, err
